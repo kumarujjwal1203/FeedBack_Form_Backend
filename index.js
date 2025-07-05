@@ -48,22 +48,47 @@ const User = mongoose.model("User", userSchema);
 const Feedback = mongoose.model("Feedback", feedbackSchema);
 
 //post api for register
+// app.post("/register", async function (req, res) {
+//   const { email, password } = req.body;
+
+//   const userEmail = await User.findOne({ email });
+
+//   if (userEmail) {
+//     res.json("user already exist");
+//     return;
+//   }
+//   const hashedPassword = await bcrypt.hash(password, 10);
+//   const user = new User({ email: email, password: hashedPassword });
+//   try {
+//     const result = await user.save();
+//     res.send(result);
+//   } catch (err) {
+//     res.send(err);
+//   }
+// });
+
 app.post("/register", async function (req, res) {
   const { email, password } = req.body;
 
-  const userEmail = await User.findOne({ email });
-
-  if (userEmail) {
-    res.json("user already exist");
-    return;
-  }
-  const hashedPassword = await bcrypt.hash(password, 10);
-  const user = new User({ email: email, password: hashedPassword });
   try {
+    if (!email || !password) {
+      return res.status(400).json({ message: "Email and password required" });
+    }
+
+    const userEmail = await User.findOne({ email });
+
+    if (userEmail) {
+      return res.status(400).json({ message: "User already exists" });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const user = new User({ email: email, password: hashedPassword });
+
     const result = await user.save();
-    res.send(result);
+    return res.status(201).json({ message: "User registered", user: result });
   } catch (err) {
-    res.send(err);
+    console.error("❌ Error in /register:", err.message); // <-- LOG IT
+    return res.status(500).json({ message: "Internal Server Error" });
   }
 });
 
